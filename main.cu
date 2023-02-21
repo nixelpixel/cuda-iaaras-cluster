@@ -1,5 +1,60 @@
-#include "stdio.h"
-#include "code.cu"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
+
+//#include "code.cu"
+
+#if defined(_WIN32) || defined(_WIN64)
+#	include "fftw3.h"
+#else
+
+#	include <fftw3.h>
+
+#endif
+
+#define COUNT 4
+
+#define POW2 8192
+//#define POW2 10000
+
+struct DFHeader {
+    char hat[16];
+};
+
+struct d{
+    double r;
+    double i;
+};
+
+struct Frequency_pair {
+
+    double C;
+    double S;
+};
+
+struct DF {
+    struct DFHeader header;
+    char data[10000];
+    float decoded_data[10000];
+    struct Frequency_pair phase_data[10000];
+    struct Frequency_pair after_filter_data[10000];
+    struct Frequency_pair fourfold_phase_data[10000];
+    double Cs, Ss;
+    double ampl;
+    double phi;
+    double f_next;
+
+
+};
+
+struct Decoder {
+
+    FILE *file;
+    struct DF * df;
+
+};
+
 __global__ void add(int a, int b, int *c)
 {
     *c = a + b;
@@ -47,21 +102,12 @@ void getInfo(){
 
 int main()
 {
-//    int a,b,c;
-//    int *dev_c;
-//    a=3;
-//    b=4;
-//    int er = cudaMalloc((void**)&dev_c, sizeof(int));
-//    add<<<1,1>>>(a,b,dev_c);
-//    cudaMemcpy(&c, dev_c, sizeof(int), cudaMemcpyDeviceToHost);
-//    printf("%d + %d is %d\n", a, b, c);
-//    printf("error = %d\n", er);
-//    cudaFree(dev_c);
-
-//    printf("\ncount =%d \nerror count = %d\n\n", count,error);
-
-//    getInfo();
-
+    auto * file_dec = static_cast<Decoder *>(malloc(sizeof(struct Decoder)));
+//    read_file("ru0883_bd_no0026.m5b", file_dec);
+//    for (int i = 0; i < COUNT; ++i) {
+//        record_float_to_file(file_dec->df[i].decoded_data);
+////
+//    }
 
 
     return 0;
