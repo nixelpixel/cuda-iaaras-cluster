@@ -100,10 +100,65 @@ void getInfo(){
     }
 }
 
+void decoding(char in, float * res){
+
+    char arr;
+
+    arr = (in >> 2) & 0x3;
+
+    if (arr == 0x0){
+        *res = 0.3333;
+    }
+    if (arr == 0x1){
+        *res = -1.0;
+    }
+    if (arr == 0x2){
+        *res = -0.3333;
+    }
+    if (arr == 0x3){
+        *res = -1.0;
+    }
+
+}
+
+void read_file(char *file_name, struct Decoder *decoder) {
+
+    decoder->file = fopen(file_name, "rb");
+    if (!decoder->file) {
+        perror("File error");
+        return;
+    }
+
+    FILE *f = decoder->file;
+    decoder->df = (struct DF *) malloc(sizeof(struct DF) * COUNT);
+    for (int i = 0; i < COUNT; ++i) {
+        fread(decoder->df[i].header.hat, 16, 1, f);
+        fread(decoder->df[i].data, 10000, 1, f);
+
+        for (int j = 0; j < 16; ++j) {
+//            printf("[%d] = %x\n", j, decoder->df[i].header.hat[j]);
+            printf("[%d] data = %x\n", j, decoder->df[i].data[j]);
+        }
+//        printf("\n");
+    }
+
+    //DECODING
+    for (int i = 0; i < COUNT; ++i) {
+        for (int j = 0; j < 10000; ++j) {
+            decoding(decoder->df[i].data[j],&decoder->df[i].decoded_data[j]);
+//            printf("data[%d] = %f\n",i, decoder->df[j].decoded_data[i]);
+        }
+    }
+    fclose(decoder->file);
+
+
+}
+
+
 int main()
 {
     auto * file_dec = static_cast<Decoder *>(malloc(sizeof(struct Decoder)));
-//    read_file("ru0883_bd_no0026.m5b", file_dec);
+    read_file("../ru0883_bd_no0026.m5b", file_dec);
 //    for (int i = 0; i < COUNT; ++i) {
 //        record_float_to_file(file_dec->df[i].decoded_data);
 ////

@@ -10,7 +10,7 @@ link_libraries     (PkgConfig::FFTW)
 
 SET(MYCOMPILE_FLAGS "-lfftw3 -lm")
 
-add_executable(cuda_1 main.cu code.cu)
+add_executable(cuda_1 main.cu)
 
 set_target_properties(cuda_1 PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON)
