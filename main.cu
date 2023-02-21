@@ -134,11 +134,11 @@ void read_file(char *file_name, struct Decoder *decoder) {
     for (int i = 0; i < COUNT; ++i) {
         fread(decoder->df[i].header.hat, 16, 1, f);
         fread(decoder->df[i].data, 10000, 1, f);
-
-        for (int j = 0; j < 16; ++j) {
-//            printf("[%d] = %x\n", j, decoder->df[i].header.hat[j]);
-            printf("[%d] data = %x\n", j, decoder->df[i].data[j]);
-        }
+//
+//        for (int j = 0; j < 16; ++j) {
+////            printf("[%d] = %x\n", j, decoder->df[i].header.hat[j]);
+////            printf("[%d] data = %x\n", j, decoder->df[i].data[j]);
+//        }
 //        printf("\n");
     }
 
@@ -284,7 +284,7 @@ void summing(struct DF * df) {
         df[i].Ss = tmp_S / 10000.0;
         df[i].ampl = sqrt(df[i].Cs * df[i].Cs + df[i].Ss * df[i].Ss);
         df[i].phi = atan2(df[i].Ss, df[i].Cs);
-        printf("[%d]: phi = %lf | ampl = %lf | Cs = %lf | Ss = %lf    %lf\n", i, df[i].phi, df[i].ampl, df[i].Cs, df[i].Ss , atan(df[i].Ss/df[i].Cs));
+//        printf("[%d]: phi = %lf | ampl = %lf | Cs = %lf | Ss = %lf    %lf\n", i, df[i].phi, df[i].ampl, df[i].Cs, df[i].Ss , atan(df[i].Ss/df[i].Cs));
     }
 }
 
@@ -330,13 +330,20 @@ int main()
         record_float_to_file(file_dec->df[i].decoded_data);
     }
 
-//    struct d fft[POW2];
-//    for (int j = 0; j < POW2; ++j) {
-//        fft[j].r = file_dec->df[0].decoded_data[j];
-//        fft[j].i = 0;
-//    }
-//    FILE *fp;
-//    fp = fopen("../results.txt", "w");
+// ЗАГРУЗКА ДАННЫХ В ПАЯМТЬ GPU  ===========================
+    int error_1 = 0;
+    float * data;
+    error_1 = cudaMalloc((void**) &data, 10000 * sizeof(float));
+    if (error_1){
+        printf("%d ERROR MEM ALLOCATION\n", error_1);
+    }
+    int error_2 = 0;
+    error_2 = cudaMemcpy(data, file_dec->df[0].decoded_data, 10000 * sizeof(float), cudaMemcpyHostToDevice);
+    if (error_2){
+        printf("%d ERROR MEM COPY TO GPU\n", error_2);
+    }
+// ==============================
+
 
     phase_rotation(file_dec->df);
     FilterLowerFreq(file_dec->df);
