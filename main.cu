@@ -263,6 +263,10 @@ void FilterLowerFreq(struct DF * df){
 
 }
 
+__global__ void frequency_multiply(){
+
+}
+
 struct Frequency_pair frequency_x4(struct Frequency_pair incoming) {
 
     struct Frequency_pair frequency_2;
@@ -276,23 +280,6 @@ struct Frequency_pair frequency_x4(struct Frequency_pair incoming) {
 //    return frequency_2;
     return frequency_4;
 }
-
-void summing(struct DF * df) {
-    for (int i = 0; i < COUNT; ++i) {
-        double tmp_C = 0;
-        double tmp_S = 0;
-        for (int j = 0; j < 10000; ++j) {
-            tmp_C += df[i].fourfold_phase_data[j].C;
-            tmp_S += df[i].fourfold_phase_data[j].S;
-        }
-        df[i].Cs = tmp_C / 10000.0;
-        df[i].Ss = tmp_S / 10000.0;
-        df[i].ampl = sqrt(df[i].Cs * df[i].Cs + df[i].Ss * df[i].Ss);
-        df[i].phi = atan2(df[i].Ss, df[i].Cs);
-//        printf("[%d]: phi = %lf | ampl = %lf | Cs = %lf | Ss = %lf    %lf\n", i, df[i].phi, df[i].ampl, df[i].Cs, df[i].Ss , atan(df[i].Ss/df[i].Cs));
-    }
-}
-
 
 void frequency_fourfold(struct DF * df){
     for (int i = 0; i < COUNT; ++i) {
@@ -326,6 +313,22 @@ void frequency_fourfold(struct DF * df){
 */
 }
 
+void summing(struct DF * df) {
+    for (int i = 0; i < COUNT; ++i) {
+        double tmp_C = 0;
+        double tmp_S = 0;
+        for (int j = 0; j < 10000; ++j) {
+            tmp_C += df[i].fourfold_phase_data[j].C;
+            tmp_S += df[i].fourfold_phase_data[j].S;
+        }
+        df[i].Cs = tmp_C / 10000.0;
+        df[i].Ss = tmp_S / 10000.0;
+        df[i].ampl = sqrt(df[i].Cs * df[i].Cs + df[i].Ss * df[i].Ss);
+        df[i].phi = atan2(df[i].Ss, df[i].Cs);
+//        printf("[%d]: phi = %lf | ampl = %lf | Cs = %lf | Ss = %lf    %lf\n", i, df[i].phi, df[i].ampl, df[i].Cs, df[i].Ss , atan(df[i].Ss/df[i].Cs));
+    }
+}
+
 __global__ void multiply(float *in, float *out){
     int tid = blockIdx.x;
     int cur_thread_id;
@@ -353,8 +356,8 @@ int main()
 
 // ЗАГРУЗКА ДАННЫХ В ПАЯМТЬ GPU  ===========================
 
-
-
+/*
+// ===============ТЕСТ ПРООИЗВОДИТЕЛЬНОСТИ ГПУ =====================
     float test_arr_in[ARR_SIZE];
     float test_arr_out[ARR_SIZE];
     float *dev_test_arr_in;
@@ -393,19 +396,23 @@ int main()
         printf("%d ERROR MEM COPY TO CPU\n", error_0);
     }
 
-//    for (int i = 0; i < ARR_SIZE; i++){
-//        printf("%f\n", test_arr_out[i]);
-//    }
+    for (int i = 0; i < ARR_SIZE; i++){
+        printf("%f\n", test_arr_out[i]);
+    }
+
     std::cout << "Trivial mult time GPU: " << (double) duration1.count() << "\n";
     std::cout << "Trivial mult time CPU: " << (double) duration2.count() << "\n";
 
+// =============== ТЕСТ ПРОИЗВОДИТЕЛЬНОСТИ ГПУ ===============
+ */
 
-//    int error_1 = 0;
-//    float * data;
-//    error_1 = cudaMalloc((void**) &data, 10000 * sizeof(float));
-//    if (error_1){
-//        printf("%d ERROR MEM ALLOCATION\n", error_1);
-//    }
+
+    int error_1 = 0;
+    float * data;
+    error_1 = cudaMalloc((void**) &data, 10000 * sizeof(float));
+    if (error_1){
+        printf("%d ERROR MEM ALLOCATION\n", error_1);
+    }
 //    int error_2 = 0;
 //    error_2 = cudaMemcpy(data, file_dec->df[0].decoded_data, 10000 * sizeof(float), cudaMemcpyHostToDevice);
 //    if (error_2){
