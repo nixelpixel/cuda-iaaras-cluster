@@ -1,7 +1,9 @@
 #include <stdio.h>
+#include "iostream"
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include "chrono"
 
 //#include "code.cu"
 
@@ -14,6 +16,9 @@
 #endif
 
 #define COUNT 4
+
+#define THREADS_GPU_COUNT 5
+#define ARR_SIZE 1000000
 
 #define POW2 8192
 //#define POW2 10000
@@ -321,6 +326,22 @@ void frequency_fourfold(struct DF * df){
 */
 }
 
+__global__ void multiply(float *in, float *out){
+    int tid = blockIdx.x;
+    int cur_thread_id;
+    for (int i = 0; i < ARR_SIZE; i++){
+        cur_thread_id = i % THREADS_GPU_COUNT;
+        if (tid < THREADS_GPU_COUNT && cur_thread_id == tid){
+            out[i] = in[i] * 2;
+        }
+    }
+}
+
+void multiply_cpu(float *in, float *out){
+    for (int i = 0; i < ARR_SIZE; i++){
+        out[i] = in[i] * 2;
+    }
+}
 
 int main()
 {
@@ -331,17 +352,66 @@ int main()
     }
 
 // ЗАГРУЗКА ДАННЫХ В ПАЯМТЬ GPU  ===========================
-    int error_1 = 0;
-    float * data;
-    error_1 = cudaMalloc((void**) &data, 10000 * sizeof(float));
-    if (error_1){
-        printf("%d ERROR MEM ALLOCATION\n", error_1);
+
+
+
+    float test_arr_in[ARR_SIZE];
+    float test_arr_out[ARR_SIZE];
+    float *dev_test_arr_in;
+    float *dev_test_arr_out;
+    int error_0 = 0;
+
+    for (int i = 0; i <ARR_SIZE; i++){
+        test_arr_in[i] = (float)i;
     }
-    int error_2 = 0;
-    error_2 = cudaMemcpy(data, file_dec->df[0].decoded_data, 10000 * sizeof(float), cudaMemcpyHostToDevice);
-    if (error_2){
-        printf("%d ERROR MEM COPY TO GPU\n", error_2);
+    error_0 = cudaMalloc((void**) &dev_test_arr_in, ARR_SIZE * sizeof(float));
+    if (error_0){
+        printf("%d ERROR MEM ALLOCATION\n", error_0);
     }
+
+    error_0 = cudaMalloc((void**) &dev_test_arr_out, ARR_SIZE * sizeof(float));
+    if (error_0){
+        printf("%d ERROR MEM ALLOCATION\n", error_0);
+    }
+
+    error_0 = cudaMemcpy(dev_test_arr_in, test_arr_in, ARR_SIZE * sizeof(float), cudaMemcpyHostToDevice);
+    if (error_0){
+        printf("%d ERROR MEM COPY TO GPU\n", error_0);
+    }
+    auto start1 = std::chrono::steady_clock::now();
+    multiply<<<THREADS_GPU_COUNT,1>>>(dev_test_arr_in, dev_test_arr_out);
+    auto end1 = std::chrono::steady_clock::now();
+    auto duration1 = std::chrono::duration_cast<std::chrono::microseconds>(end1 - start1);
+
+    auto start2 = std::chrono::steady_clock::now();
+    multiply_cpu(test_arr_in, test_arr_out);
+    auto end2 = std::chrono::steady_clock::now();
+    auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
+
+    error_0 = cudaMemcpy(test_arr_out, dev_test_arr_out, ARR_SIZE * sizeof(float), cudaMemcpyDeviceToHost);
+    if (error_0){
+        printf("%d ERROR MEM COPY TO CPU\n", error_0);
+    }
+
+//    for (int i = 0; i < ARR_SIZE; i++){
+//        printf("%f\n", test_arr_out[i]);
+//    }
+    std::cout << "Trivial mult time GPU: " << (double) duration1.count() << "\n";
+    std::cout << "Trivial mult time CPU: " << (double) duration2.count() << "\n";
+
+
+//    int error_1 = 0;
+//    float * data;
+//    error_1 = cudaMalloc((void**) &data, 10000 * sizeof(float));
+//    if (error_1){
+//        printf("%d ERROR MEM ALLOCATION\n", error_1);
+//    }
+//    int error_2 = 0;
+//    error_2 = cudaMemcpy(data, file_dec->df[0].decoded_data, 10000 * sizeof(float), cudaMemcpyHostToDevice);
+//    if (error_2){
+//        printf("%d ERROR MEM COPY TO GPU\n", error_2);
+//    }
+
 // ==============================
 
 
