@@ -263,9 +263,7 @@ void FilterLowerFreq(struct DF * df){
 
 }
 
-__global__ void frequency_multiply(){
 
-}
 
 struct Frequency_pair frequency_x4(struct Frequency_pair incoming) {
 
@@ -281,14 +279,53 @@ struct Frequency_pair frequency_x4(struct Frequency_pair incoming) {
     return frequency_4;
 }
 
+__global__ void frequency_x4_gpu(struct Frequency_pair incoming, struct Frequency_pair out){
+    printf("here\n");
+    struct Frequency_pair frequency_2;
+    frequency_2.C = (incoming.C * incoming.C) - (incoming.S * incoming.S);
+    frequency_2.S = 2 * incoming.C * incoming.S;
+
+    out.C = (frequency_2.C * frequency_2.C) - (frequency_2.S * frequency_2.S);
+    out.S = 2 * frequency_2.C * frequency_2.S;
+}
+
+void frequency_multiply(struct DF * device_df){
+//        for (int i = 0; i < COUNT; ++i) {
+
+            for (int j = 0; j < 10000; ++j) {
+
+                frequency_x4_gpu<<<1,1>>>(device_df[0].after_filter_data[j],device_df[0].fourfold_phase_data[j]);
+//                df[i].fourfold_phase_data[j].S = frequency_x4_gpu(df[i].after_filter_data[j]).S;
+//                df[i].fourfold_phase_data[j].C = frequency_x4_gpu(df[i].after_filter_data[j]).C;
+//                df[i].fourfold_phase_data[j].S = frequency_x4_gpu(df[i].after_filter_data[j]).S;
+            }
+//    }
+}
+
 void frequency_fourfold(struct DF * df){
+//    struct DF * device_df;
+//
+//    int error_1;
+//    error_1 = cudaMalloc((void**) &device_df, sizeof(struct DF) * COUNT);
+//    if (error_1){
+//        std::cout<<"ERROR_9";
+//    }
+
     for (int i = 0; i < COUNT; ++i) {
         for (int j = 0; j < 10000; ++j) {
             df[i].fourfold_phase_data[j].C = frequency_x4(df[i].after_filter_data[j]).C;
             df[i].fourfold_phase_data[j].S = frequency_x4(df[i].after_filter_data[j]).S;
         }
     }
-
+//    error_1 = cudaMemcpy(device_df, df, sizeof(struct DF) * COUNT,  cudaMemcpyHostToDevice);
+//    if (error_1){
+//        std::cout<<"ERROR_10";
+//    }
+//    frequency_multiply(device_df);
+//    error_1 = cudaMemcpy(df, device_df, sizeof(struct DF) * COUNT,  cudaMemcpyDeviceToHost);
+//    if (error_1){
+//        std::cout<<"ERROR_11";
+//    }
     //фУРЬЕ =============================================
 /*
     double after_arr[10000];
@@ -311,6 +348,22 @@ void frequency_fourfold(struct DF * df){
 //    fftw_destroy_plan(plan);
 //    ====================================================
 */
+}
+
+__global__ void summing_gpu(struct DF * device_df){
+    for (int i = 0; i < COUNT; ++i) {
+        double tmp_C = 0;
+        double tmp_S = 0;
+        for (int j = 0; j < 10000; ++j) {
+            tmp_C += device_df[i].fourfold_phase_data[j].C;
+            tmp_S += device_df[i].fourfold_phase_data[j].S;
+        }
+        device_df[i].Cs = tmp_C / 10000.0;
+        device_df[i].Ss = tmp_S / 10000.0;
+        device_df[i].ampl = sqrt(device_df[i].Cs * device_df[i].Cs + device_df[i].Ss * device_df[i].Ss);
+        device_df[i].phi = atan2(device_df[i].Ss, device_df[i].Cs);
+        printf("[%d]: phi = %lf | ampl = %lf | Cs = %lf | Ss = %lf    %lf\n", i, device_df[i].phi, device_df[i].ampl, device_df[i].Cs, device_df[i].Ss , atan(device_df[i].Ss/device_df[i].Cs));
+    }
 }
 
 void summing(struct DF * df) {
@@ -425,9 +478,15 @@ int main()
     phase_rotation(file_dec->df);
     FilterLowerFreq(file_dec->df);
     frequency_fourfold(file_dec->df);
-    summing(file_dec->df);
 
+    struct DF * device_df;
+    cudaMalloc((void **)&device_df, sizeof(struct DF) * COUNT);
+    cudaMemcpy(device_df, file_dec->df, sizeof(struct DF) * COUNT, cudaMemcpyHostToDevice);
+    summing_gpu<<<1,1>>>(device_df);
+//    summing(file_dec->df);
+    cudaMemcpy(file_dec->df, device_df, sizeof(struct DF) * COUNT, cudaMemcpyDeviceToHost);
     free(file_dec);
-
+    cudaFree(device_df);
+    getInfo();
     return EXIT_SUCCESS;
 }
