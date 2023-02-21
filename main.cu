@@ -169,6 +169,159 @@ void record_float_to_file(float array[10000] ) {
 
 }
 
+float calc_alpha(long int t, float f){
+
+    double alpha = f * (double)t;
+//    phi += M_PI_4;
+    alpha-=floor(alpha);
+    alpha*=2*M_PI;
+    return alpha;
+}
+
+struct Frequency_pair calc_freq_pair(long int t, /*double phi,*/ float I){
+    struct Frequency_pair res;
+    float f = 1851.0 / 8192.0;
+    float alpha=calc_alpha(t,f);
+
+    res.C = I * cos(alpha);
+    res.S = I * sin(alpha);
+    return res;
+}
+
+void phase_rotation(struct DF * df) {
+    FILE *fp;
+    fp = fopen("../phase.txt", "w");
+    for (int i = 0; i < COUNT; ++i) {
+        for (int j = 0; j < 10000; ++j) {
+            df[i].phase_data[j].S = calc_freq_pair(i * 10000 + j,df[i].decoded_data[j]).S;
+            df[i].phase_data[j].C = calc_freq_pair(i * 10000 + j,df[i].decoded_data[j]).C;
+//            printf("phase[%d][%d]: C = %f| S = %f\n", i,j,df[i].phase_data[j].C,df[i].phase_data[j].S);
+
+            fprintf(fp, "%f %f\n",df[i].phase_data[j].C,df[i].phase_data[j].S);
+
+        }
+
+    }
+    fclose(fp);
+
+}
+
+void FilterLowerFreq(struct DF * df){
+    double local_avg_re=0;
+    double local_avg_im=0;
+    long int index = 0;
+
+    for(int k = 0; k < COUNT; ++k){
+        for (int i = 0; i < 10000; ++i) {
+            local_avg_re = 0;
+            local_avg_im = 0;
+
+            for (int j = -4; j <= 3; ++j) {
+                index = i+j;
+                if (index < 0){
+                    index = 0;
+                }
+                else if ( index >= 10000) {
+                    index = 9999;
+                }
+                local_avg_re += df[k].phase_data[index].C;
+                local_avg_im = df[k].phase_data[index].S;
+            }
+
+            df[k].after_filter_data[i].C = local_avg_re / 8.0;
+            df[k].after_filter_data[i].S = local_avg_im / 8.0;
+        }
+    }
+
+
+    //фУРЬЕ =============================================
+
+    double after_arr[10000];
+    struct d fourier[10000];
+
+    fftw_plan plan;
+    plan = fftw_plan_dft_1d(POW2, (fftw_complex *) df->after_filter_data, (fftw_complex *) fourier, FFTW_FORWARD, FFTW_ESTIMATE);
+    fftw_execute(plan);
+
+    FILE *file2;
+    file2 = fopen("../filter_fourier.txt", "w");
+
+    for (int i = 0; i < POW2; ++i) {
+        after_arr[i] = sqrt(fourier[i].r * fourier[i].r + fourier[i].i * fourier[i].i);
+
+        fprintf(file2, "%lf\n", after_arr[i]);
+//        printf( "%lf\n", arr[i]);
+    }
+    fftw_destroy_plan(plan);
+    fclose(file2);
+//    ====================================================
+
+}
+
+struct Frequency_pair frequency_x4(struct Frequency_pair incoming) {
+
+    struct Frequency_pair frequency_2;
+    frequency_2.C = (incoming.C * incoming.C) - (incoming.S * incoming.S);
+    frequency_2.S = 2 * incoming.C * incoming.S;
+
+    struct Frequency_pair frequency_4;
+    frequency_4.C = (frequency_2.C * frequency_2.C) - (frequency_2.S * frequency_2.S);
+    frequency_4.S = 2 * frequency_2.C * frequency_2.S;
+
+//    return frequency_2;
+    return frequency_4;
+}
+
+void summing(struct DF * df) {
+    for (int i = 0; i < COUNT; ++i) {
+        double tmp_C = 0;
+        double tmp_S = 0;
+        for (int j = 0; j < 10000; ++j) {
+            tmp_C += df[i].fourfold_phase_data[j].C;
+            tmp_S += df[i].fourfold_phase_data[j].S;
+        }
+        df[i].Cs = tmp_C / 10000.0;
+        df[i].Ss = tmp_S / 10000.0;
+        df[i].ampl = sqrt(df[i].Cs * df[i].Cs + df[i].Ss * df[i].Ss);
+        df[i].phi = atan2(df[i].Ss, df[i].Cs);
+        printf("[%d]: phi = %lf | ampl = %lf | Cs = %lf | Ss = %lf    %lf\n", i, df[i].phi, df[i].ampl, df[i].Cs, df[i].Ss , atan(df[i].Ss/df[i].Cs));
+    }
+}
+
+
+void frequency_fourfold(struct DF * df){
+    for (int i = 0; i < COUNT; ++i) {
+        for (int j = 0; j < 10000; ++j) {
+            df[i].fourfold_phase_data[j].C = frequency_x4(df[i].after_filter_data[j]).C;
+            df[i].fourfold_phase_data[j].S = frequency_x4(df[i].after_filter_data[j]).S;
+        }
+    }
+
+    //фУРЬЕ =============================================
+/*
+    double after_arr[10000];
+    struct d fourier[10000];
+
+    fftw_plan plan;
+    plan = fftw_plan_dft_1d(POW2, (fftw_complex *) df->fourfold_phase_data, (fftw_complex *) fourier, FFTW_FORWARD, FFTW_ESTIMATE);
+    fftw_execute(plan);
+
+    FILE *file2;
+    file2 = fopen("../double_freq.txt", "w");
+
+    for (int i = 0; i < POW2; ++i) {
+        after_arr[i] = sqrt(fourier[i].r * fourier[i].r + fourier[i].i * fourier[i].i);
+
+        fprintf(file2, "%lf\n", after_arr[i]);
+    }
+    fclose(file2);
+
+//    fftw_destroy_plan(plan);
+//    ====================================================
+*/
+}
+
+
 int main()
 {
     auto * file_dec = static_cast<Decoder *>(malloc(sizeof(struct Decoder)));
@@ -177,6 +330,20 @@ int main()
         record_float_to_file(file_dec->df[i].decoded_data);
     }
 
+//    struct d fft[POW2];
+//    for (int j = 0; j < POW2; ++j) {
+//        fft[j].r = file_dec->df[0].decoded_data[j];
+//        fft[j].i = 0;
+//    }
+//    FILE *fp;
+//    fp = fopen("../results.txt", "w");
 
-    return 0;
+    phase_rotation(file_dec->df);
+    FilterLowerFreq(file_dec->df);
+    frequency_fourfold(file_dec->df);
+    summing(file_dec->df);
+
+    free(file_dec);
+
+    return EXIT_SUCCESS;
 }
