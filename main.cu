@@ -155,14 +155,27 @@ void read_file(char *file_name, struct Decoder *decoder) {
 }
 
 
+void record_float_to_file(float array[10000] ) {
+
+    FILE *fp;
+    fp = fopen("../floats.txt", "w");
+
+    for (unsigned i = 0; i < 10000; i++) {
+        fprintf(fp, "%f\n", array[i]);
+
+    }
+
+    fclose(fp);
+
+}
+
 int main()
 {
     auto * file_dec = static_cast<Decoder *>(malloc(sizeof(struct Decoder)));
     read_file("../ru0883_bd_no0026.m5b", file_dec);
-//    for (int i = 0; i < COUNT; ++i) {
-//        record_float_to_file(file_dec->df[i].decoded_data);
-////
-//    }
+    for (int i = 0; i < COUNT; ++i) {
+        record_float_to_file(file_dec->df[i].decoded_data);
+    }
 
 
     return 0;
