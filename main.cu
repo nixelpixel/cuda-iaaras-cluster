@@ -22,7 +22,7 @@
 
 #define POW2 8192
 //#define POW2 10000
-
+#define M_PI 3.14159265358979323846
 struct DFHeader {
     char hat[16];
 };
@@ -169,7 +169,7 @@ double sin_arr[]=
 
 */
 
-/*`
+/*
 
 */
 void read_file(char *file_name, struct Decoder *decoder) {
@@ -223,9 +223,8 @@ void record_float_to_file(float array[10000] ) {
 float calc_alpha(long int t, float f){
 
     double alpha = f * (double)t;
-//    phi += M_PI_4;
     alpha-=floor(alpha);
-    alpha*=2*M_PI;
+    alpha*=2* M_PI;
     return alpha;
 }
 
@@ -294,6 +293,7 @@ __global__ void phase_rotation_GPU(struct DF * device_df, float device_cos_arr[]
         alpha-=floor(alpha);
         //printf("alpha = %f\n", alpha);
         alpha *=2*M_PI;
+        //printf("\n\n%llf\n\n",M_PI);
         alpha_tmp = alpha * 180.0 / M_PI;
         //printf("alpha = %f\n", alpha);
         alpha_int = floor(alpha_tmp);
@@ -579,15 +579,153 @@ void multiply_cpu(float *in, float *out){
         out[i] = in[i] * 2;
     }
 }
+typedef struct {double re; double im;} complex;
 
+void CFT(int sign, double t, double *xre, double *xim, int npow)
+{
+    complex cxcs,hold,xa;
+    int nmax,i,nn,mm,nw,layer,ii,loc,ll,nw1,j,ij;
+    int msk[32];
+    double  zz,delta,w;
+
+    for(i = 1, nmax = 1; i <= npow; i++)
+        nmax*=2;
+
+    zz = 2.*M_PI*(double)sign/(double)nmax;
+    if(sign > 0)
+        delta = 1./(t*(double)nmax);
+    else
+        delta = t;
+
+    msk[1] = nmax/2;
+    for(i = 2; i <= npow; i++)
+        msk[i]=msk[i-1]/2;
+
+    nn = nmax;
+    mm = 2;
+    for(layer = 1; layer <= npow; layer++)
+    {
+        nn = nn/2;
+        nw = 0;
+        for(i = 1; i<= mm; i+=2)
+        {
+            ii = nn*i;
+            w = zz*(double)nw;
+            cxcs.re = cos(w);
+            cxcs.im = sin(w);
+            for(j = 1; j <= nn; j++)
+            {
+                ii++;
+                ij = ii - nn;
+                xa.re = cxcs.re*xre[ii-1] - cxcs.im*xim[ii-1];
+                xa.im = cxcs.re*xim[ii-1] + cxcs.im*xre[ii-1];
+                xre[ii-1] = xre[ij-1] - xa.re;
+                xim[ii-1] = xim[ij-1] - xa.im;
+                xre[ij-1] = xre[ij-1] + xa.re;
+                xim[ij-1] = xim[ij-1] + xa.im;
+            }
+            for(loc = 2; loc <= npow; loc++)
+            {
+                ll = nw - msk[loc];
+                if(ll < 0)
+                {
+                    nw += msk[loc];
+                    goto L_40;
+                }
+                if(ll == 0)
+                {
+                    nw = msk[loc+1];
+                    goto L_40;
+                }
+                nw = ll;
+            }
+            L_40:;
+        }
+        mm *= 2;
+    }
+    nw = 0;
+    for(i = 1; i <= nmax; i++)
+    {
+        nw1 = nw + 1;
+        hold.re = xre[nw1-1];
+        hold.im = xim[nw1-1];
+        if(nw1-i < 0) goto a;
+        if(nw1-i > 0)
+        {
+            xre[nw1-1] = xre[i-1]*delta;
+            xim[nw1-1] = xim[i-1]*delta;
+        }
+        xre[i-1] = hold.re*delta;
+        xim[i-1] = hold.im*delta;
+        a:		for(loc = 1; loc <= npow; loc++)
+    {
+        ll = nw - msk[loc];
+        if(ll < 0)
+        {
+            nw += msk[loc];
+            goto L_80;
+        }
+        if(ll == 0)
+        {
+            nw = msk[loc+1];
+            goto L_80;
+        }
+        nw = ll;
+    }
+        L_80:;
+    }
+}
 int main()
 {
     auto * file_dec = static_cast<Decoder *>(malloc(sizeof(struct Decoder)));
+    printf("here");
+
     read_file("./ru0883_sv_no0026.m5b", file_dec);
     for (int i = 0; i < COUNT; ++i) {
         record_float_to_file(file_dec->df[i].decoded_data);
     }
+    printf("here");
 
+    double xre[POW2];
+    double xim[POW2];
+
+    for (int j = 0; j < POW2; ++j) {
+
+        xre[j] = file_dec->df->decoded_data[j];
+        xim[j] = 0;
+    }
+ 
+     CFT(-1, 1.0, xre,xim, 13);
+
+    FILE *fp;
+    fp = fopen("./results.txt", "w");
+
+
+
+    double arr[POW2];
+    for (int i = 0; i < POW2; ++i) {
+        arr[i] = 0;
+    }
+    for (int i = 0; i < POW2; ++i) {
+        arr[i] = sqrt(xre[i] * xre[i] + xim[i] * xim[i]);
+        fprintf(fp, "%lf\n", arr[i]);
+//        printf( "%lf\n", arr[i]);
+    }
+    fclose(fp);
+
+   
+
+    long int max_num = 0;
+    float max_f = arr[0];
+
+    for (int i = 0; i < POW2; ++i) {
+            if (arr[i]>max_f){
+                max_f = arr[i];
+                max_num = i;
+            }
+        }
+    printf("\nfloat = %ld | num = %lf\n", max_num, max_f);
+    
 // ЗАГРУЗКА ДАННЫХ В ПАЯМТЬ GPU  ===========================
 
 /*
@@ -705,14 +843,20 @@ int main()
     float * device_sin_arr;
 
 
+
     cudaMalloc((void **)&cos_arr, 360 * sizeof(float));
     cudaMalloc((void **)&sin_arr, 360 * sizeof(float));
 
     cudaMemcpy(device_cos_arr, cos_arr, sizeof(cos_arr), cudaMemcpyHostToDevice);
     cudaMemcpy(device_sin_arr, sin_arr, sizeof(sin_arr), cudaMemcpyHostToDevice);
 
+
+
     cudaMalloc((void **)&device_df_lf, sizeof(struct DF) * COUNT);
     cudaMemcpy(device_df_lf, file_dec->df, sizeof(struct DF) * COUNT, cudaMemcpyHostToDevice);
+
+    
+
     phase_rotation_GPU<<<1,1>>>(device_df_lf, device_cos_arr, device_sin_arr);
 
     FilterLowerFreqGPU<<<1,1>>>(device_df_lf);
@@ -729,6 +873,8 @@ int main()
 
     free(file_dec);
     cudaFree(device_df);
+    cudaFree(device_cos_arr);
+    cudaFree(device_sin_arr);
 //    getInfo();
     return EXIT_SUCCESS;
 }
