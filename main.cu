@@ -112,16 +112,16 @@ void decoding(char in, float * res){
     arr = (in >> 2) & 0x3;
 
     if (arr == 0x0){
-        *res = 0.3333;
+        *res = -0.3333;
     }
     if (arr == 0x1){
         *res = -1.0;
     }
     if (arr == 0x2){
-        *res = -0.3333;
+        *res = 0.3333;
     }
     if (arr == 0x3){
-        *res = -1.0;
+        *res = 1.0;
     }
 
 }
@@ -183,7 +183,7 @@ float calc_alpha(long int t, float f){
     return alpha;
 }
 
-struct Frequency_pair calc_freq_pair(long int t, /*double phi,*/ float I){
+struct Frequency_pair calc_freq_pair(long int t, float I){
     struct Frequency_pair res;
     float f = 1851.0 / 8192.0;
     float alpha=calc_alpha(t,f);
@@ -209,6 +209,19 @@ void phase_rotation(struct DF * df) {
     }
     fclose(fp);
 
+}
+
+__global__ void phase_rotation_GPU(struct DF * device_df){
+
+    for (int i = 0; i < COUNT; ++i) {
+        for (int j = 0; j < 10000; ++j) {
+            device_df[i].phase_data[j].S = calc_freq_pair(i * 10000 + j,device_df[i].decoded_data[j]).S;
+            device_df[i].phase_data[j].C = calc_freq_pair(i * 10000 + j,device_df[i].decoded_data[j]).C;
+
+
+        }
+
+    }
 }
 
 __global__ void FilterLowerFreqGPU(struct DF * device_df){
@@ -292,8 +305,6 @@ void FilterLowerFreq(struct DF * df){
 //    ====================================================
 
 }
-
-
 
 struct Frequency_pair frequency_x4(struct Frequency_pair incoming) {
 
@@ -529,8 +540,6 @@ int main()
     cudaMalloc((void **)&device_df_lf, sizeof(struct DF) * COUNT);
     cudaMemcpy(device_df_lf, file_dec->df, sizeof(struct DF) * COUNT, cudaMemcpyHostToDevice);
     FilterLowerFreqGPU<<<1,1>>>(device_df_lf);
-
-
 //    frequency_fourfold(file_dec->df);
     frequency_fourfold_GPU<<<1,1>>>(device_df_lf);
     cudaMemcpy(file_dec->df, device_df_lf, sizeof(struct DF) * COUNT, cudaMemcpyDeviceToHost);
