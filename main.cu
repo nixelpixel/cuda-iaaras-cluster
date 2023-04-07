@@ -20,8 +20,8 @@
 #define THREADS_GPU_COUNT 5
 #define ARR_SIZE 1000000
 
-#define POW2 8192
-//#define POW2 10000
+//#define POW2 8192
+#define POW2 10000
 #define M_PI 3.14159265358979323846
 struct DFHeader {
     char hat[16];
@@ -40,11 +40,11 @@ struct Frequency_pair {
 
 struct DF {
     struct DFHeader header;
-    char data[10000];
-    float decoded_data[10000];
-    struct Frequency_pair phase_data[10000];
-    struct Frequency_pair after_filter_data[10000];
-    struct Frequency_pair fourfold_phase_data[10000];
+    char data[POW2];
+    float decoded_data[POW2];
+    struct Frequency_pair phase_data[POW2];
+    struct Frequency_pair after_filter_data[POW2];
+    struct Frequency_pair fourfold_phase_data[POW2];
     double Cs, Ss;
     double ampl;
     double phi;
@@ -105,6 +105,17 @@ void getInfo(){
     }
 }
 
+const float const_DecodeAmlitudeArray[]={
+    -0.3333, -1.0, 0.3333, 1.0
+};
+
+
+void decoding(char in, float * res){
+    unsigned int amplindex = ( in >> 2 ) & 0x03;
+
+    *res = const_DecodeAmlitudeArray[ amplindex ];
+}
+/*
 void decoding(char in, float * res){
 
     char arr;
@@ -124,7 +135,7 @@ void decoding(char in, float * res){
         *res = 1.0;
     }
 
-}
+}*/
 
 /*
 double sin_arr[]=
@@ -182,36 +193,36 @@ void read_file(char *file_name, struct Decoder *decoder) {
 
     FILE *f = decoder->file;
     decoder->df = (struct DF *) malloc(sizeof(struct DF) * COUNT);
-    for (int i = 0; i < COUNT; ++i) {
-        fread(decoder->df[i].header.hat, 16, 1, f);
-        fread(decoder->df[i].data, 10000, 1, f);
-//
-//        for (int j = 0; j < 16; ++j) {
-////            printf("[%d] = %x\n", j, decoder->df[i].header.hat[j]);
-////            printf("[%d] data = %x\n", j, decoder->df[i].data[j]);
-//        }
-//        printf("\n");
-    }
+    //for (int i = 0; i < COUNT; ++i) {
+        fread(decoder->df->header.hat, 16, 1, f);
+        fread(decoder->df->data, POW2, 1, f);
+
+        for (int j = 0; j < 16; ++j) {
+            printf("[%d] = %x\n", j, (unsigned char) decoder->df->header.hat[j]);
+//            printf("[%d] data = %x\n", j, decoder->df[i].data[j]);
+        }
+        printf("\n");
+    //}
 
     //DECODING
-    for (int i = 0; i < COUNT; ++i) {
-        for (int j = 0; j < 10000; ++j) {
-            decoding(decoder->df[i].data[j],&decoder->df[i].decoded_data[j]);
+   // for (int i = 0; i < COUNT; ++i) {
+        for (int j = 0; j < POW2; ++j) {
+            decoding(decoder->df->data[j],&decoder->df->decoded_data[j]);
 //            printf("data[%d] = %f\n",i, decoder->df[j].decoded_data[i]);
         }
-    }
-    fclose(decoder->file);
-
-
+        fclose(decoder->file);
+    //}
 }
 
 
-void record_float_to_file(float array[10000] ) {
+
+
+void record_float_to_file(float array[POW2] ) {
 
     FILE *fp;
     fp = fopen("../floats.txt", "w");
 
-    for (unsigned i = 0; i < 10000; i++) {
+    for (unsigned i = 0; i < POW2; i++) {
         fprintf(fp, "%f\n", array[i]);
 
     }
@@ -252,9 +263,9 @@ void phase_rotation(struct DF * df) {
     FILE *fp;
     fp = fopen("../phase.txt", "w");
     for (int i = 0; i < COUNT; ++i) {
-        for (int j = 0; j < 10000; ++j) {
-            df[i].phase_data[j].S = calc_freq_pair(i * 10000 + j,df[i].decoded_data[j]).S;
-            df[i].phase_data[j].C = calc_freq_pair(i * 10000 + j,df[i].decoded_data[j]).C;
+        for (int j = 0; j < POW2; ++j) {
+            df[i].phase_data[j].S = calc_freq_pair(i * POW2 + j,df[i].decoded_data[j]).S;
+            df[i].phase_data[j].C = calc_freq_pair(i * POW2 + j,df[i].decoded_data[j]).C;
 //            printf("phase[%d][%d]: C = %f| S = %f\n", i,j,df[i].phase_data[j].C,df[i].phase_data[j].S);
 
             fprintf(fp, "%f %f\n",df[i].phase_data[j].C,df[i].phase_data[j].S);
@@ -285,7 +296,7 @@ __global__ void phase_rotation_GPU(struct DF * device_df, float device_cos_arr[]
     float f = 1851.0 / 8192.0;
     double alpha, alpha_tmp;
     int alpha_int;
-    for (int j = 0; j < 10000; ++j) {
+    for (int j = 0; j < POW2; ++j) {
 
         //device_df->phase_data[j].S = calc_freq_pair(j,device_df->decoded_data[j]).S;
         //device_df->phase_data[j].C = calc_freq_pair(j,device_df->decoded_data[j]).C;
@@ -353,7 +364,7 @@ __global__ void FilterLowerFreqGPU(struct DF * device_df){
     long int index = 0;
 
     for(int k = 0; k < COUNT; ++k){
-        for (int i = 0; i < 10000; ++i) {
+        for (int i = 0; i < POW2; ++i) {
             local_avg_re = 0;
             local_avg_im = 0;
 
@@ -362,7 +373,7 @@ __global__ void FilterLowerFreqGPU(struct DF * device_df){
                 if (index < 0){
                     index = 0;
                 }
-                else if ( index >= 10000) {
+                else if ( index >= POW2) {
                     index = 9999;
                 }
                 local_avg_re += device_df[k].phase_data[index].C;
@@ -383,7 +394,7 @@ void FilterLowerFreq(struct DF * df){
     long int index = 0;
 
     for(int k = 0; k < COUNT; ++k){
-        for (int i = 0; i < 10000; ++i) {
+        for (int i = 0; i < POW2; ++i) {
             local_avg_re = 0;
             local_avg_im = 0;
 
@@ -392,7 +403,7 @@ void FilterLowerFreq(struct DF * df){
                 if (index < 0){
                     index = 0;
                 }
-                else if ( index >= 10000) {
+                else if ( index >= POW2) {
                     index = 9999;
                 }
                 local_avg_re += df[k].phase_data[index].C;
@@ -407,8 +418,8 @@ void FilterLowerFreq(struct DF * df){
 
     //фУРЬЕ =============================================
 
-    double after_arr[10000];
-    struct d fourier[10000];
+    double after_arr[POW2];
+    struct d fourier[POW2];
 
     fftw_plan plan;
     plan = fftw_plan_dft_1d(POW2, (fftw_complex *) df->after_filter_data, (fftw_complex *) fourier, FFTW_FORWARD, FFTW_ESTIMATE);
@@ -444,7 +455,7 @@ struct Frequency_pair frequency_x4(struct Frequency_pair incoming) {
 }
 
 __global__ void frequency_x4_gpu(struct Frequency_pair incoming, struct Frequency_pair out){
-    printf("here\n");
+   
     struct Frequency_pair frequency_2;
     frequency_2.C = (incoming.C * incoming.C) - (incoming.S * incoming.S);
     frequency_2.S = 2 * incoming.C * incoming.S;
@@ -456,7 +467,7 @@ __global__ void frequency_x4_gpu(struct Frequency_pair incoming, struct Frequenc
 void frequency_multiply(struct DF * device_df){
 //        for (int i = 0; i < COUNT; ++i) {
 
-            for (int j = 0; j < 10000; ++j) {
+            for (int j = 0; j < POW2; ++j) {
 
                 frequency_x4_gpu<<<1,1>>>(device_df[0].after_filter_data[j],device_df[0].fourfold_phase_data[j]);
 //                df[i].fourfold_phase_data[j].S = frequency_x4_gpu(df[i].after_filter_data[j]).S;
@@ -468,7 +479,7 @@ void frequency_multiply(struct DF * device_df){
 
 __global__ void frequency_fourfold_GPU(struct DF * device_df){
     for (int i = 0; i < COUNT; ++i) {
-        for (int j = 0; j < 10000; ++j) {
+        for (int j = 0; j < POW2; ++j) {
             struct Frequency_pair frequency_2;
             frequency_2.C = (device_df[i].after_filter_data[j].C * device_df[i].after_filter_data[j].C) - (device_df[i].after_filter_data[j].S * device_df[i].after_filter_data[j].S);
             frequency_2.S = 2 * device_df[i].after_filter_data[j].C * device_df[i].after_filter_data[j].S;
@@ -493,7 +504,7 @@ void frequency_fourfold(struct DF * df){
 //    }
 
     for (int i = 0; i < COUNT; ++i) {
-        for (int j = 0; j < 10000; ++j) {
+        for (int j = 0; j < POW2; ++j) {
             df[i].fourfold_phase_data[j].C = frequency_x4(df[i].after_filter_data[j]).C;
             df[i].fourfold_phase_data[j].S = frequency_x4(df[i].after_filter_data[j]).S;
         }
@@ -535,12 +546,12 @@ __global__ void summing_gpu(struct DF * device_df){
     for (int i = 0; i < COUNT; ++i) {
         double tmp_C = 0;
         double tmp_S = 0;
-        for (int j = 0; j < 10000; ++j) {
+        for (int j = 0; j < POW2; ++j) {
             tmp_C += device_df[i].fourfold_phase_data[j].C;
             tmp_S += device_df[i].fourfold_phase_data[j].S;
         }
-        device_df[i].Cs = tmp_C / 10000.0;
-        device_df[i].Ss = tmp_S / 10000.0;
+        device_df[i].Cs = tmp_C / POW2;
+        device_df[i].Ss = tmp_S / POW2;
         device_df[i].ampl = sqrt(device_df[i].Cs * device_df[i].Cs + device_df[i].Ss * device_df[i].Ss);
         device_df[i].phi = atan2(device_df[i].Ss, device_df[i].Cs);
         printf("[%d]: phi = %lf | ampl = %lf | Cs = %lf | Ss = %lf    %lf\n", i, device_df[i].phi, device_df[i].ampl, device_df[i].Cs, device_df[i].Ss , atan(device_df[i].Ss/device_df[i].Cs));
@@ -551,12 +562,12 @@ void summing(struct DF * df) {
     for (int i = 0; i < COUNT; ++i) {
         double tmp_C = 0;
         double tmp_S = 0;
-        for (int j = 0; j < 10000; ++j) {
+        for (int j = 0; j < POW2; ++j) {
             tmp_C += df[i].fourfold_phase_data[j].C;
             tmp_S += df[i].fourfold_phase_data[j].S;
         }
-        df[i].Cs = tmp_C / 10000.0;
-        df[i].Ss = tmp_S / 10000.0;
+        df[i].Cs = tmp_C / POW2;
+        df[i].Ss = tmp_S / POW2;
         df[i].ampl = sqrt(df[i].Cs * df[i].Cs + df[i].Ss * df[i].Ss);
         df[i].phi = atan2(df[i].Ss, df[i].Cs);
 //        printf("[%d]: phi = %lf | ampl = %lf | Cs = %lf | Ss = %lf    %lf\n", i, df[i].phi, df[i].ampl, df[i].Cs, df[i].Ss , atan(df[i].Ss/df[i].Cs));
@@ -675,19 +686,20 @@ void CFT(int sign, double t, double *xre, double *xim, int npow)
         L_80:;
     }
 }
+
 int main()
 {
     auto * file_dec = static_cast<Decoder *>(malloc(sizeof(struct Decoder)));
-    printf("here");
+  
 
-    read_file("./ru0883_sv_no0026.m5b", file_dec);
+    read_file("./ru0883_bd_no0026.m5b", file_dec);
     for (int i = 0; i < COUNT; ++i) {
         record_float_to_file(file_dec->df[i].decoded_data);
     }
-    printf("here");
-
+ 
     double xre[POW2];
     double xim[POW2];
+    //struct d fourier[POW2];
 
     for (int j = 0; j < POW2; ++j) {
 
@@ -695,7 +707,17 @@ int main()
         xim[j] = 0;
     }
  
-     CFT(-1, 1.0, xre,xim, 13);
+    CFT(-1, 1, xre,xim, 13);
+    
+
+    /*fftw_plan plan;
+
+    plan = fftw_plan_dft_1d(8192, (fftw_complex *) fourier, (fftw_complex *) fourier, FFTW_FORWARD, FFTW_ESTIMATE);
+    
+    fftw_execute(plan);
+    fftw_destroy_plan(plan);
+*/
+
 
     FILE *fp;
     fp = fopen("./results.txt", "w");
@@ -708,6 +730,7 @@ int main()
     }
     for (int i = 0; i < POW2; ++i) {
         arr[i] = sqrt(xre[i] * xre[i] + xim[i] * xim[i]);
+       //arr[i] = sqrt(fourier[i].r * fourier[i].r + fourier[i].i * fourier[i].i);
         fprintf(fp, "%lf\n", arr[i]);
 //        printf( "%lf\n", arr[i]);
     }
