@@ -1,0 +1,150 @@
+Controller device log start.
+
+============
+Parsing file "cluster.cfg"...
+  Line 4: "CorrFreq = 154.89".
+  Line 8: "DataFile = ../M5B_data/ru0883_bd_no0026.m5b".
+  Line 10: "DataBlocksAmount = 20".
+Note: dataframe size to read not specified, set to 10000.
+Note: correlators amount not specified, autodetecting.
+Config file parsed successfully.
+  Data file "../M5B_data/ru0883_bd_no0026.m5b", read 20 blocks by 10000+16 bytes;
+  Correlators amount: autodetect, frequency 154.890000.
+
+============
+Autodetected correlators amount: 3.
+Subtracted frequency before phase rotation: 435.881908 (index-normalized 0.770508) at 6312.
+Subtracted normalized master frequency: 0.770508.
+Sending initialization struct to 1/3: { to:1, shtdwn:false, blksz:10000, freq:0.771 }.
+Received right answer from correlator 1.
+Sending initialization struct to 2/3: { to:2, shtdwn:false, blksz:10000, freq:0.771 }.
+Received right answer from correlator 2.
+Sending initialization struct to 3/3: { to:3, shtdwn:false, blksz:10000, freq:0.771 }.
+Received right answer from correlator 3.
+Main cycle STARTED.
+  Reading dataframe 0. Current DataBlocksSize() == 1.
+	Frm#: 0 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 1. DataBlocksSize() == 0; first bytes [0x10995CE7 0x5952E747 0x625A9E16 0xA0596E15].
++ Datablock successfully sent to corr 1 and thus deleted.
+  Reading dataframe 1. Current DataBlocksSize() == 1.
+	Frm#: 1 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 2. DataBlocksSize() == 0; first bytes [0x9E66A952 0xADA6919A 0x84989156 0x92995EEF].
++ Datablock successfully sent to corr 2 and thus deleted.
+< Got answer from correlator 1, phase 123310378.000000.
+  Reading dataframe 2. Current DataBlocksSize() == 1.
+	Frm#: 2 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 3. DataBlocksSize() == 0; first bytes [0x15DC75F0 0xAD5E99A2 0x3754919A 0xA66D68FA].
++ Datablock successfully sent to corr 3 and thus deleted.
+< Got answer from correlator 2, phase 439417469.000000.
+  Reading dataframe 3. Current DataBlocksSize() == 1.
+	Frm#: 3 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 1. DataBlocksSize() == 0; first bytes [0x52D9948F 0xDB0B1C95 0xA912557C 0x52AA5E96].
++ Datablock successfully sent to corr 1 and thus deleted.
+< Got answer from correlator 3, phase -483398167.000000.
+  Reading dataframe 4. Current DataBlocksSize() == 1.
+	Frm#: 4 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 2. DataBlocksSize() == 0; first bytes [0x66CF7838 0xB4972A43 0x66E1CA46 0x4DE8391D].
++ Datablock successfully sent to corr 2 and thus deleted.
+< Got answer from correlator 1, phase 2012511329.000000.
+  Reading dataframe 5. Current DataBlocksSize() == 1.
+	Frm#: 5 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 3. DataBlocksSize() == 0; first bytes [0x78268F94 0x049E5AD1 0x5855FC4B 0x7F2DA491].
++ Datablock successfully sent to corr 3 and thus deleted.
+< Got answer from correlator 2, phase -1262033595.000000.
+  Reading dataframe 6. Current DataBlocksSize() == 1.
+	Frm#: 6 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 1. DataBlocksSize() == 0; first bytes [0x788BA2A5 0x915ADE7E 0x51EA5E96 0x0494AD98].
++ Datablock successfully sent to corr 1 and thus deleted.
+< Got answer from correlator 3, phase -2143844635.000000.
+  Reading dataframe 7. Current DataBlocksSize() == 1.
+	Frm#: 7 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 2. DataBlocksSize() == 0; first bytes [0xB8B2A99D 0xA2654EC7 0x6AAD1E29 0x695D6691].
++ Datablock successfully sent to corr 2 and thus deleted.
+< Got answer from correlator 1, phase 1553882630.000000.
+  Reading dataframe 8. Current DataBlocksSize() == 1.
+	Frm#: 8 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 3. DataBlocksSize() == 0; first bytes [0xB0A59EA9 0x616ACFA9 0x62E6AD26 0x62A5AE59].
++ Datablock successfully sent to corr 3 and thus deleted.
+< Got answer from correlator 2, phase -928538779.000000.
+  Reading dataframe 9. Current DataBlocksSize() == 1.
+	Frm#: 9 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 1. DataBlocksSize() == 0; first bytes [0x11A8EDC4 0xE54D4778 0x451461D2 0x105B5CC7].
++ Datablock successfully sent to corr 1 and thus deleted.
+< Got answer from correlator 3, phase -1648376218.000000.
+  Reading dataframe 10. Current DataBlocksSize() == 1.
+	Frm#: 10 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 2. DataBlocksSize() == 0; first bytes [0x9ECDEA81 0xEACF1899 0x741D9AE3 0xD5D2634A].
++ Datablock successfully sent to corr 2 and thus deleted.
+< Got answer from correlator 1, phase -1361300909.000000.
+  Reading dataframe 11. Current DataBlocksSize() == 1.
+	Frm#: 11 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 3. DataBlocksSize() == 0; first bytes [0x52D54E87 0xC3261E99 0x919A5D56 0x91565D56].
++ Datablock successfully sent to corr 3 and thus deleted.
+< Got answer from correlator 2, phase 1571095184.000000.
+  Reading dataframe 12. Current DataBlocksSize() == 1.
+	Frm#: 12 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 1. DataBlocksSize() == 0; first bytes [0x5E952A92 0x5E96926A 0x6E9A9256 0xD28B889E].
++ Datablock successfully sent to corr 1 and thus deleted.
+< Got answer from correlator 3, phase -375702016.000000.
+  Reading dataframe 13. Current DataBlocksSize() == 1.
+	Frm#: 13 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 2. DataBlocksSize() == 0; first bytes [0xEB70B06B 0x91A2E5EE 0xA2696EA5 0x6B8AAC69].
++ Datablock successfully sent to corr 2 and thus deleted.
+< Got answer from correlator 1, phase 135938572.000000.
+  Reading dataframe 14. Current DataBlocksSize() == 1.
+	Frm#: 14 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 3. DataBlocksSize() == 0; first bytes [0xC6079299 0x969D95F2 0xDD780362 0x5592997E].
++ Datablock successfully sent to corr 3 and thus deleted.
+< Got answer from correlator 2, phase -1849752461.000000.
+  Reading dataframe 15. Current DataBlocksSize() == 1.
+	Frm#: 15 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 1. DataBlocksSize() == 0; first bytes [0x695126AD 0x616AADDE 0xF4678FA6 0x041D5A51].
++ Datablock successfully sent to corr 1 and thus deleted.
+< Got answer from correlator 3, phase 1281558379.000000.
+  Reading dataframe 16. Current DataBlocksSize() == 1.
+	Frm#: 16 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 2. DataBlocksSize() == 0; first bytes [0x52695EA6 0x52966EA6 0x69AD9EA9 0xAAAD6591].
++ Datablock successfully sent to corr 2 and thus deleted.
+< Got answer from correlator 1, phase 720019205.000000.
+  Reading dataframe 17. Current DataBlocksSize() == 1.
+	Frm#: 17 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 3. DataBlocksSize() == 0; first bytes [0x9962E54C 0xA5C3D734 0x1891266D 0xA2E76E8B].
++ Datablock successfully sent to corr 3 and thus deleted.
+< Got answer from correlator 2, phase -2043621822.000000.
+  Reading dataframe 18. Current DataBlocksSize() == 1.
+	Frm#: 18 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
+> Sending datablock to corr 1. DataBlocksSize() == 0; first bytes [0x9C6560C9 0xC5E73095 0xAD95A161 0xAEAA61E9].
++ Datablock successfully sent to corr 1 and thus deleted.
+< Got answer from correlator 3, phase 167495653.000000.
+  Reading dataframe 19. Current DataBlocksSize() == 1.
+	Frm#: 19 (frame in second);
+	Time: day 853 from year begin, 48541 second in day;
++++ Dataframes limit (20) reached. File reading complete.
+> Sending datablock to corr 2. DataBlocksSize() == 0; first bytes [0xD2D1F624 0xE16AAD95 0x51A69D6A 0xEDC58AB0].
++ Datablock successfully sent to corr 2 and thus deleted.
+< Got answer from correlator 1, phase 427824970.000000.
+< Got answer from correlator 2, phase 872627575.000000.
+
+============
+Main cycle ENDED. Finalization...
+Work successfully accomplished by CTLDEV.
+Closing log file.

@@ -355,7 +355,9 @@ __global__ void FilterLowerFreq_GPU(struct DF * device_df, datablockid_t datablo
 
 
 //    for(int k = 0; k < COUNT; ++k){
-        for (int i = 0; i < POW2; ++i) {
+    int i = blockIdx.x;
+      //  for (int i = 0; i < POW2; ++i) {
+        if (i < BLOCKS_GPU){
             local_avg_re = 0;
             local_avg_im = 0;
 
@@ -374,7 +376,20 @@ __global__ void FilterLowerFreq_GPU(struct DF * device_df, datablockid_t datablo
             device_df->after_filter_data[i].C = local_avg_re / 8.0;
             device_df->after_filter_data[i].S = local_avg_im / 8.0;
         }
+        
     //}
+    /*
+    int i = blockIdx.x;
+      
+    if (i < BLOCKS_GPU - 5){
+        for ( int j = 0; j < 5; j++ ) {
+            device_df->after_filter_data[i].C += device_df->phase_data[i +j].C;
+            device_df->after_filter_data[i].S += device_df->phase_data[i +j].S;
+        }
+        device_df->after_filter_data[i].C /= 5.0;
+        device_df->after_filter_data[i].S /= 5.0;
+    }*/
+
 
 
 }
@@ -762,7 +777,7 @@ double gpu_get_phi( double freq, dataunit_t *data,  datablockid_t datablock_id )
     int msec = 0, trigger = 10; /* 10ms */
 clock_t before = clock();
     phase_rotation_GPU<<<BLOCKS_GPU,1>>>(device_memory_pointer, freq, datablock_id);
-    FilterLowerFreq_GPU<<<1,1>>>(device_memory_pointer, datablock_id);
+    FilterLowerFreq_GPU<<<BLOCKS_GPU,1>>>(device_memory_pointer, datablock_id);
     frequency_fourfold_GPU<<<BLOCKS_GPU,1>>>(device_memory_pointer);
     summing_gpu<<<1,1>>>(device_memory_pointer, datablock_id);
     cudaMemcpy(&phi, &device_memory_pointer->phi, sizeof( device_memory_pointer->phi ) , cudaMemcpyDeviceToHost);

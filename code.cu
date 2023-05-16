@@ -25,7 +25,7 @@ struct DFHeader {
 
 struct d{
     double r;
-    double i;
+    double i;printf("FilterLowFreq [%u]: phi = %lf | ampl = %lf | Cs = %lf | Ss = %lf    %lf\n", datablock_id, device_df->phi, device_df->ampl, device_df->Cs, device_df->Ss , atan(device_df->Ss/device_df->Cs));
 };
 
 struct Frequency_pair {
@@ -681,10 +681,6 @@ void CFT(int sign, double t, double *xre, double *xim, int npow)
     }
         L_80:;
     }
-}
-
-unsigned char gpu_init( corrid_t corrindex, char *logfilename ){
-    
 }
 
 double get_phi(dataunit_t *data){

@@ -32,13 +32,13 @@ extern "C" {
 // Initialization. Returns:
 //	"CUDAERR_NONE" if no errors;
 //	"CUDAERR_GENERAL" if any (no CUDA available etc.):
-unsigned char gpu_init( corrid_t corrindex, char *logfilename );
+unsigned char gpu_init( corrid_t corrindex, char *logfilename, struct DF * device_memory_pointer, datablockid_t datablock_id );
 
 // Used in main cycle. Returns phi:
-double gpu_get_phi( double curfreq, dataunit_t *data,  datablockid_t datablock_id ); // { return get_phi( data ); }
+double gpu_get_phi( double curfreq, dataunit_t *data,  datablockid_t datablock_id, struct DF * device_memory_pointer ); // { return get_phi( data ); }
 
 // Deinitialization:
-void gpu_finalize( void );
+void gpu_finalize( struct DF * device_memory_pointer);
 
 
 

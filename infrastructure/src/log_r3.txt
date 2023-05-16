@@ -1,0 +1,17 @@
+Correlator #3 log start.
+Received initialization data: ID 3, blocks size 10000 units, frequency 0.771.
+Received block. First bytes: [0x15DC75F0 0xAD5E99A2 0x3754919A 0xA66D68FA].
+Sending back phase -483398167.000000.
+Received block. First bytes: [0x78268F94 0x049E5AD1 0x5855FC4B 0x7F2DA491].
+Sending back phase -2143844635.000000.
+Received block. First bytes: [0xB0A59EA9 0x616ACFA9 0x62E6AD26 0x62A5AE59].
+Sending back phase -1648376218.000000.
+Received block. First bytes: [0x52D54E87 0xC3261E99 0x919A5D56 0x91565D56].
+Sending back phase -375702016.000000.
+Received block. First bytes: [0xC6079299 0x969D95F2 0xDD780362 0x5592997E].
+Sending back phase 1281558379.000000.
+Received block. First bytes: [0x9962E54C 0xA5C3D734 0x1891266D 0xA2E76E8B].
+Sending back phase 167495653.000000.
+Received shutdown flag.
+Work successfully accomplished by CORR 3.
+Closing log file.
