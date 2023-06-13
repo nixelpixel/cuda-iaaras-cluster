@@ -322,7 +322,7 @@ __global__ void FilterLowerFreq_GPU(struct DF * device_df, datablockid_t datablo
                 index = 9999;
             }
             local_avg_re += device_df->phase_data[index].C;
-            local_avg_im = device_df->phase_data[index].S;
+            local_avg_im += device_df->phase_data[index].S;
         }
 
         device_df->after_filter_data[i].C = local_avg_re / 8.0;
