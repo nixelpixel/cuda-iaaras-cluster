@@ -781,9 +781,11 @@ GPUAnswer gpu_correlate( dataunit_t *origdata, datablockid_t datablockindex, dou
     
 	answer.phase = atan2(imSum, reSum) ;
 
-    if(datablockindex % 100 == 0){
+    /*if(datablockindex % 100 == 0){
         printf("[%d]: phase = %lf   ampl = %lf Время выполнения на GPU: %.3f мс\n", datablockindex, answer.phase, answer.ampl, milliseconds);
-    }
+    }*/
+
+    printf("%lf %lf\n", answer.phase * (180 / M_PI), answer.ampl);
 
     // Освобождение ресурсов
     cudaEventDestroy(start);
